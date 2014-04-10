@@ -1,0 +1,19 @@
+Data Mining 290T Final Project Proposal: Using Topic Modeling To Identify Irrelevant Product Reviews
+Matt Valente, Juan Hernandez
+
+
+Introduction
+Occasionally, among reviews of products on Amazon.com, there are reviews that are not actually about the product but rather about the seller. This includes reviews about the quality of packaging, damaged items, wrong item shipped, shipping delays, etc. The result of this mismatch is that products that would otherwise receive high average ratings  are receiving lower ratings. Also, if customers post their negative review about the seller on the product page, this information will not be available among the seller reviews that were posted on the seller page, meaning that the overall seller rating is missing some information. 
+Amazon allows other users to rate the usefulness of the reviews, which helps to prevent some of these from showing among the top few reviews. However, negative or positive reviews about a seller that are incorrectly placed among product reviews still affect the product’s rating. Moreover, the fact that these reviews are appearing in the product page means that the seller page is missing reviews that may impact that seller’s rating. The use of topic discovery to identify seller reviews as a subtopic among product reviews could be used to generate a prompt to the reviewer that says, “This review seems like it may be about the seller and not about the product itself. Would you like to post the review on the seller page?” This is a superior solution to just allowing other reviewers to comment and rate reviews as helpful/unhelpful because it can be carried out at the time of the review based on the text, rather than manually and over time by other customers. Moreover, this approach results in a call-to-action for reviewers to change the location of their post.
+
+Problem
+ - Motivation: Want to improve the topic relevance and placement of Amazon reviews
+ - Data Set: https://snap.stanford.edu/data/web-Amazon.html
+
+Solution
+ - Techniques: Latent Dirichlet Allocation
+ 	- http://machinelearning.wustl.edu/mlpapers/paper_files/BleiNJ03.pdf
+ 	- https://www.cs.princeton.edu/~blei/topicmodeling.html
+
+Related Work
+ - Partially inspired by http://www.yelp.com/html/pdf/YelpDatasetChallengeWinner_ImprovingRestaurants.pdf
