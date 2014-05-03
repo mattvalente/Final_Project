@@ -1,20 +1,27 @@
 import numpy.random as r
 
-
-#sample = r.random_integers(0, 12886487, 10)
-sample = list(r.choice(100, 10, replace=False))
+# create sample list
+sample = list(r.choice(12886487, 10000, replace=False))
 sample.sort()
-#print sample
-l = []
-with open('../a.txt', 'r') as f:
+
+
+l = []        # list of sampled reviews
+
+
+# put sampled reviews into list l
+with open('../bookreviews.txt', 'r') as f:
   i = 0
   for line in f:
     if i in sample:
-      l.append([line, i])
+      l.append([line])
       sample.pop(0)
+    if i == 1000000:
+        print '1 million!'      # to check progress
+    if i == 5000000:
+      print '5 million yeah!'
     i += 1
 
-#print len(l)
-#print l
-with open('../bookthousand.txt', 'w') as f:
-  [f.write(i) for i in l]
+
+# write list l to file
+with open('../booktenthousand.txt', 'w') as f:
+  [f.write(i[0]) for i in l]
