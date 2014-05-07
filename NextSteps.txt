@@ -1,0 +1,48 @@
+Next Steps:
+	[ ] Slides
+		- Methodology
+			-Include on semi-supervised approach
+			-Alternative Approaches Considered (Occam's Razor)
+				-Additional tests:
+					- LDA feature more predictive just running classifier on text
+		- Results
+			- Classifier with raw text as features performance
+			- Using classifier with LDA features to optimize K
+		- Production
+			- Run-time implementation (black box)
+		- Other Considerations
+			- Add some slides here
+		- Lower priority investigations:
+			- Test with modified Stop Words list (iterative or td-idf)
+			- Modify distribution (upweight seller-reviews) of training set for LDA
+			- Jaccard similarity elbow method for optimizing K
+			- Text Clusters and run-time = test new review against labeled centroids
+			
+	[ ] Programming:
+  		M add regex to stopwords function
+  		M run stopwords on 10,000 sample
+  		M run stopwords on train
+  		M create test
+  		M run stopwords on test
+		==================================
+  		M dictionary, corpus objects
+  		J train naive bayes on train_raw
+  		M train naive bayes on topic_vec
+  		J run classifier on test_raw
+  		J create F2 function = ((1 + 2**2) x precision x recall) / (2**2 x precision + recall)
+  		M run classifier on test_vec
+  		M gradient descent -> find K to minimize error
+  		J,M compare (J:NB, M:BestLDA/NB)
+
+
+	[ ] Datasets
+	*	- Full = full set
+	*	- S = 100,000 sample
+	*	- A_1 = 10,000 sample
+		- LDAset = stop removed from A_1		<-- LDA
+	*	- pre-train = 1,040 labeled sample from A_1 (4% +)
+		- train_raw = stop removed from pre-train  <--Naive Bayes wo LDA 
+		- train_vec = LDA feature vectors for train_raw records <--Naive Bayes w LDA
+		- pre-test = 100 sample from 100,000 sample
+		- test_raw = stop removed from C_1
+		- test_vec = LDA feature vectors for test_1 records
