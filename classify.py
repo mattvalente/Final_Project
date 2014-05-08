@@ -17,12 +17,13 @@ lda = m.load_thing('lda200')
 
 #print m.optimize_lda(corpus, dictionary, train, test, max_topics=15)
 X, y = m.topic_vector(train, lda, dictionary)
-testX, testy  = m.topic_vector(train, lda, dictionary)
+testX, testy  = m.topic_vector(test, lda, dictionary)
 #print testy
 
 
 
-classifier = tree.DecisionTreeClassifier(criterion='gini',max_depth=7,random_state = 9999)
+
+classifier = tree.DecisionTreeClassifier(criterion='gini')
 my_tree = classifier.fit(X, y)
 probas_ = classifier.fit(X, y).predict_proba(testX)
 fpr, tpr, thresholds = metrics.roc_curve(testy, probas_[:, 1])
@@ -32,7 +33,8 @@ print("Area under the ROC curve DT: %f" % roc_auc)
 # Compute confusion matrix
 y_pred_DT = classifier.fit(X, y).predict(testX)
 cm_DT = metrics.confusion_matrix(testy, y_pred_DT)
-print("Confusion Matrix DT:",cm_DT)	
+print("Confusion Matrix DT:",cm_DT)
+print y_pred_DT	
 
 # Plot ROC curve
 pl.clf()
@@ -44,9 +46,9 @@ pl.xlabel('False Positive Rate')
 pl.ylabel('True Positive Rate')
 pl.title('Receiver operating characteristic Decision Tree')
 pl.legend(loc="lower right")
-pl.show()	
+#pl.show()	
 pl.savefig('../ROC_DecisionTree.pdf')
-	
+
 with open('../DecisionTree.dot', 'w') as f:
     f = tree.export_graphviz(my_tree, out_file=f)#
 
