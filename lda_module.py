@@ -1,9 +1,10 @@
 from gensim import corpora, models, similarities
-from gensim.models import hdpmodel, ldamodel, lsimodel
+from gensim.models import ldamodel
 import pickle
 import timeit
+import time
 import numpy as np
-from sklearn import svm, metrics
+from sklearn import tree, metrics
 import re
 
 
@@ -12,25 +13,22 @@ import re
 # ***************************************
 
 
-def remove_stuff(stoptext, reviews_txt):
-  '''removes stopwords and rare words, and
-    prepares text for lda_objects function'''
-  # read in reviews text as a string
+
+def text_prep(stoptext, reviews_txt):       # use this function instead of stops or remove_stuff
   with open(('../%s.txt' % reviews_txt), 'r') as f:
-    string = f.read()
+    documents = [doc for doc in f]      # list of reivews
   # read in stopwords text as a list of words
   with open (('../%s.txt' % stoptext), 'r') as f:
-      data= f.read().replace('\n', '')
-  stop_list = set(data.split())
-  # remove punctuation
-  only_words = re.findall(r'\w+', string,flags = re.UNICODE | re.LOCALE)  # returns set of words
-  # remove stop words
-  remove_stops = [word for word in only_words if word not in stop_list]
-  tokens_once = set(word for word in set(remove_stops) if remove_stops.count(word) == 1)
-  # remove words that only appear once
-  texts = [[word] for word in remove_stops if word not in tokens_once]
-  return texts    # format: ['how', 'now', 'brown', 'cow', 'apple', 'banana']
-
+    data= f.read().replace('\n', '')
+  stoplist = set(data.split())
+  texts = [[word for word in re.findall(r'\w+', document.lower(),flags = re.UNICODE | re.LOCALE) if word not in stoplist] 
+        for document in documents]
+  # remove words that appear only once
+  all_tokens = sum(texts, [])
+  tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
+  texts = [[word for word in text if word not in tokens_once] 
+           for text in texts]
+  return texts    # format [['how', 'now', 'brown', 'cow'], ['apples', 'bananas']]
 
 def lda_objects(texts):
   '''creates dictionary and corpus objects
@@ -43,20 +41,8 @@ def lda_objects(texts):
 # prepare train and test set for classification
 # ***************************************
 
-def stops(stoptext, reviews_txt):
-  '''removes stop words in train/test sets
-    and returns as a list of reviews'''
-  with open(('../%s.txt' % reviews_txt), 'r') as f:
-    reviews = [[word for word in re.findall(r'\w+', line,flags = re.UNICODE | re.LOCALE)] for line in f]  # [['how', 'now'], ['brown', 'cow']]
-  with open (('../%s.txt' % stoptext), 'r') as f:
-    data= f.read().replace('\n', '')
-  stop_list = set(data.split())
-  reviews = [[word for word in review if word not in stop_list] for review in reviews]
-  reviews = [' '.join(review) for review in reviews]
-  return reviews    # format ['review1', 'review2', ...]
 
-
-# test.txt line_number == 80
+# test.txt line_number == 81
 # train.txt line_number == 1,000
 def labels(reviews, line_number):
   '''takes a list of reviews, and the
@@ -96,7 +82,7 @@ def load_thing(filename):
 # train lda model
 # ***************************************
 
-# lda = ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=10, gamma_threshold=None)
+# lda = ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=10)
 
 # ***************************************
 # create review vectors for classification
@@ -124,7 +110,7 @@ def topic_vector(reviews, lda, dictionary):
 # ***************************************
 
 # fit classifier
-# clf = svm.SVC()
+# clf = tree.DecisionTreeClassifier()
 # clf.fit(X, y)
 
 # predict
@@ -134,36 +120,49 @@ def topic_vector(reviews, lda, dictionary):
 # optimize number of topics for lda
 # ***************************************
 
-def optimize_lda(corpus, dictionary, train, test, topics=10, max_topics=200): 
+def optimize_lda(corpus, dictionary, train, test, topics=5, max_topics=1200):  # train and test set must be lists of review-label pairs
   '''runs lda with increasing number of topics to optimize
     number of topics; runs svm classifier with each new lda lda model
     and adds error to error_list'''
-  error_list = []
+  accuracy_list = []
   while topics <= max_topics:
+    start_time = time.clock()
     lda = ldamodel.LdaModel(corpus, id2word=dictionary, num_topics=topics)
-    print 'lda!'
-    X, y_true = topic_vector(train, lda, dictionary)
-    classifier = svm.SVC()
-    classifier.fit(X, y_true)
+    print 'lda !'
+    x_train, y_train = topic_vector(train, lda, dictionary)
+    classifier = tree.DecisionTreeClassifier()
+    classifier.fit(x_train, y_train)
     print 'classified!'
-    testX, testy = topic_vector(test, lda, dictionary)
-    y_pred = classifier.predict(testX)
+    x_test, y_test = topic_vector(test, lda, dictionary)
+    y_pred = list(classifier.predict(x_test)) 
     print 'predicted!'
-    error = metrics.fbeta_score(testy, y_pred, beta=2)    # F2 Score
-    error_list.append([error, topics])
-    print 'topics! ', topics
-    topics += 5
-  return error_list
+    accuracy = metrics.fbeta_score(y_test, y_pred, beta=2)    # F2 Score
+    accuracy_list.append([accuracy, topics])
+    print 'accuracy! ', accuracy 
+    #confusion = metrics.confusion_matrix(y_test, y_pred)
+    #print 'accuracy ', metrics.accuracy_score(y_test, y_pred)
+    #print 'precision ', metrics.precision_score(y_test, y_pred)
+    #print 'recall ', metrics.recall_score(y_test, y_pred)
+    #topics += 50
+    if topics < 100:
+      topics += 25
+    else:
+      topics += 100
+    end_time = time.clock()
+    print ('lda_%s time: %s' % (topics, (end_time - start_time)))
+    #print y_test
+    #print y_pred
+  #save_thing(accuracy_list, 'accuracy')
+  return accuracy_list
 
-# time tests; these run if you run script as main
-'''
-timeit.timeit("create_list()", setup="from __main__ import test", number=1)
-timeit.timeit("stop_words()", setup="from __main__ import test", number=1)
-timeit.timeit("remove_rare()", setup="from __main__ import test", number=1)
-timeit.timeit("lda_objects()", setup="from __main__ import test", number=1)
-'''
+
+
 
 if __name__ == '__main__':
     main()
 
+# time tests; these run if you run script as main
 
+#timeit.timeit("text_prep()", setup="from __main__ import test", number=1)
+#timeit.timeit("topic_vector()", setup="from __main__ import test", number=1)
+#timeit.timeit("optimize_lda()", setup="from __main__ import test", number=1)
